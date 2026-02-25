@@ -1,7 +1,7 @@
 import ansible_runner
 
 # Executa o playbook
-r = ansible_runner.run(private_data_dir= "/home/lance/oai-ansible/", playbook='up_oai.yaml')
+r = ansible_runner.run(private_data_dir= "/home/lance/oai-ansible-ufrn/", playbook='up_oai.yaml')
 
 print(f"Status final: {r.status}")
 print(f"Código de saída: {r.rc}")

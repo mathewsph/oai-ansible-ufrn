@@ -21,7 +21,7 @@ CONTROLLER_IP = '172.31.0.73'  # IP do seu controller-node
 SSH_USER = 'lance'
 SSH_PASS = 'lance123'
 PLAYBOOK_PATH = 'setup_port_security.yaml'
-BASE_DIR = "/home/lance/ansible"
+BASE_DIR = "/home/lance/oai-ansible-ufrn"
 
 # Detecta o IP da VM atual
 meu_ip = get_my_ip()

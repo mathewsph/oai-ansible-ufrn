@@ -124,19 +124,19 @@
     - name: Template docker compose file
       template: 
         src: docker-compose-basic-nrf-pMANO.yaml.j2
-        dest: "/home/lance/oai-ansible/pacote_A/core-scripts/docker-compose-basic-nrf-pMANO.yaml"
+        dest: "/home/lance/oai-ansible-ufrn/pacote_A/core-scripts/docker-compose-basic-nrf-pMANO.yaml"
         owner: lance
         group: lance
 
     - name: Copy oai_db_pMANO.sql
       copy:
         src: "oai_db_pMANO.sql"
-        dest: "/home/lance/oai-ansible/pacote_A/core-scripts/database/oai_db_pMANO.sql"
+        dest: "/home/lance/oai-ansible-ufrn/pacote_A/core-scripts/database/oai_db_pMANO.sql"
 
     - name: Copy individual files
       copy:
         src: "individual-files/{{ item }}"
-        dest: "/home/lance/oai-ansible/pacote_A/core-scripts/{{ item }}"
+        dest: "/home/lance/oai-ansible-ufrn/pacote_A/core-scripts/{{ item }}"
       loop:
         - nginx.conf
         - index.html
@@ -146,7 +146,7 @@
     - name: Copy directory
       copy:
         src: video-dash/
-        dest: "/home/lance/oai-ansible/pacote_A/video-dash/"
+        dest: "/home/lance/oai-ansible-ufrn/pacote_A/video-dash/"
         mode: preserve
         owner: lance
         group: lance
@@ -154,14 +154,14 @@
     - name: Copy install_netflow
       copy:
         src: install_netflow/
-        dest: "/home/lance/oai-ansible/pacote_A/install_netflow/"
+        dest: "/home/lance/oai-ansible-ufrn/pacote_A/install_netflow/"
         mode: preserve
         owner: lance
         group: lance
 
     - name: Deploy Docker compose
       community.docker.docker_compose_v2:
-        project_src: "/home/lance/oai-ansible/pacote_A/core-scripts"
+        project_src: "/home/lance/oai-ansible-ufrn/pacote_A/core-scripts"
         files:
           - docker-compose-basic-nrf-pMANO.yaml
         state: present
