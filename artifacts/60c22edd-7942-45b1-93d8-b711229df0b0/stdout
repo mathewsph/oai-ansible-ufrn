@@ -1,0 +1,58 @@
+[1;35m[WARNING]: No inventory was parsed, only implicit localhost is available[0m
+[1;35m[WARNING]: provided hosts list is empty, only localhost is available. Note that the implicit localhost does not match 'all'[0m
+
+PLAY [Up OpenAirInterface server] **********************************************
+
+TASK [Gathering Facts] *********************************************************
+[0;32mok: [localhost][0m
+
+TASK [Registrar status de comissionamento] *************************************
+[1;35m[WARNING]: Deprecation warnings can be disabled by setting `deprecation_warnings=False` in ansible.cfg.[0m
+[0;35m[DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.[0m
+[0;35mOrigin: /home/lance/oai-ansible/up_oai.yaml:18:30[0m
+[0;35m[0m
+[0;35m16   tasks:[0m
+[0;35m17     - name: Registrar status de comissionamento[0m
+[0;35m18       ansible.builtin.shell: |[0m
+[0;35m                                ^ column 30[0m
+[0;35m[0m
+[0;35mUse `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.[0m
+[0;35m[0m
+[0;33mchanged: [localhost][0m
+
+TASK [Instalar dependências iniciais] ******************************************
+[0;33mchanged: [localhost][0m
+
+TASK [Adicionar chave GPG oficial do Docker] ***********************************
+[0;33mchanged: [localhost][0m
+
+TASK [Adicionar repositório estável do Docker] *********************************
+[0;35m[DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.[0m
+[0;35m[0m
+[0;33mchanged: [localhost][0m
+
+TASK [Instalar Docker Engine e Docker Compose] *********************************
+[0;33mchanged: [localhost][0m
+
+TASK [Garantir que o serviço do Docker está rodando] ***************************
+[0;32mok: [localhost][0m
+
+TASK [Adicionar meu usuário ao grupo docker] ***********************************
+[0;33mchanged: [localhost][0m
+
+TASK [Habilitar IP forwarding em tempo de execução (runtime)] ******************
+[0;33mchanged: [localhost][0m
+
+TASK [Ensure iptables rule is present] *****************************************
+[0;31m[ERROR]: Task failed: Module failed: string index out of range[0m
+[0;31mOrigin: /home/lance/oai-ansible/up_oai.yaml:102:7[0m
+[0;31m[0m
+[0;31m100       shell: "sysctl -w net.ipv4.ip_forward=1"[0m
+[0;31m101[0m
+[0;31m102     - name: Ensure iptables rule is present[0m
+[0;31m          ^ column 7[0m
+[0;31m[0m
+[0;31mfatal: [localhost]: FAILED! => {"changed": false, "msg": "Task failed: Module failed: string index out of range"}[0m
+
+PLAY RECAP *********************************************************************
+[0;31mlocalhost[0m                  : [0;32mok=9   [0m [0;33mchanged=7   [0m unreachable=0    [0;31mfailed=1   [0m skipped=0    rescued=0    ignored=0   

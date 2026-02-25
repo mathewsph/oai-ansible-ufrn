@@ -1,0 +1,1 @@
+{"event": "verbose", "uuid": "441645fa-6328-4a60-8822-c6b73ec767dd", "counter": 8, "stdout": "\u001b[0;31m161         name: pmano/deploy-docker-compose\u001b[0m", "start_line": 7, "end_line": 8, "runner_ident": "8238ff69-fdee-4857-892d-d19320b31ce6", "created": "2026-02-25T17:36:15.776507+00:00"}

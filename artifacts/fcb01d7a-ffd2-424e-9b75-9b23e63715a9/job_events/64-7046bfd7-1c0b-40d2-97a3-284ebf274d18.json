@@ -1,0 +1,1 @@
+{"event": "verbose", "uuid": "7046bfd7-1c0b-40d2-97a3-284ebf274d18", "counter": 64, "stdout": "\u001b[0;35mUse the `vars` and `varnames` lookups instead.\u001b[0m", "start_line": 63, "end_line": 64, "runner_ident": "fcb01d7a-ffd2-424e-9b75-9b23e63715a9", "created": "2026-02-25T17:54:16.033514+00:00"}

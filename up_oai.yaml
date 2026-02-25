@@ -1,0 +1,179 @@
+---
+- name: Up OpenAirInterface server
+  hosts: localhost
+  connection: local
+  become: yes
+
+  vars:
+    oai_ip: "127.0.0.1"
+    ip_range: "{{ range(26, 36) | map('string') | list }}"
+    base_ip: "172.31.0"
+    # Corrigido a forma de pegar a variável de ambiente
+    #interface: "{{ lookup('env', 'CORE_INTERFACE') | default('ens3') }}"
+    interface: ens3
+    essential_packages:
+      - unzip
+
+  tasks:
+    - name: Registrar status de comissionamento
+      ansible.builtin.shell: |
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - Comissionamento CORE Open5GS Iniciado" >> {{ ansible_env.HOME }}/registros.txt
+
+    - name: Instalar dependências iniciais
+      apt:
+        name:
+          - ca-certificates
+          - autoconf
+          - automake
+          - ccache
+          - build-essential
+          - cmake
+          - doxygen
+          - ethtool
+          - g++
+          - inetutils-tools
+          - libboost-all-dev
+          - libncurses6
+          - libncurses-dev
+          - libusb-1.0-0
+          - libusb-1.0-0-dev
+          - libusb-dev
+          - python3-dev
+          - python3-pip
+          - python3-mako
+          - python3-numpy
+          - python3-requests
+          - python3-scipy
+          - python3-setuptools
+          - python3-ruamel.yaml
+          - git
+          - curl
+          - tree
+          - vim
+          - nfs-common
+          - openssh-server
+          - net-tools
+          - lsb-release
+          - gnupg
+          - wireshark
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - gnupg
+        state: present
+        update_cache: yes
+
+    - name: Adicionar chave GPG oficial do Docker
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Adicionar repositório estável do Docker
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+
+    - name: Instalar Docker Engine e Docker Compose
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+
+    - name: Garantir que o serviço do Docker está rodando
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Adicionar meu usuário ao grupo docker
+      user:
+        name: "lance"
+        groups: docker
+        append: yes
+
+    - name: Habilitar IP forwarding em tempo de execução (runtime)
+      become: true
+      shell: "sysctl -w net.ipv4.ip_forward=1"
+
+    - name: Ensure iptables rule is present
+      become: true
+      ansible.builtin.iptables:
+        chain: DOCKER-USER
+        in_interface: "{{ interface }}"
+        out_interface: eth0
+        destination: 192.168.70.128/26
+        jump: ACCEPT
+        action: insert
+          #when: slice_parts_ip_GNB != slice_parts_ip_Core
+      
+    - name: Adiciona regra POSTROUTING para MASQUERADE na rede 192.168.70.128/26
+      become: true
+      ansible.builtin.iptables:
+        table: nat
+        chain: POSTROUTING
+        source: 192.168.70.128/26
+        out_interface: "!eth0"
+        jump: MASQUERADE
+        action: append
+      
+    - name: Template docker compose file
+      template: 
+        src: docker-compose-basic-nrf-pMANO.yaml.j2
+        dest: "/home/lance/oai-ansible/pacote_A/core-scripts/docker-compose-basic-nrf-pMANO.yaml"
+        owner: lance
+        group: lance
+
+    - name: Copy oai_db_pMANO.sql
+      copy:
+        src: "oai_db_pMANO.sql"
+        dest: "/home/lance/oai-ansible/pacote_A/core-scripts/database/oai_db_pMANO.sql"
+
+    - name: Copy individual files
+      copy:
+        src: "individual-files/{{ item }}"
+        dest: "/home/lance/oai-ansible/pacote_A/core-scripts/{{ item }}"
+      loop:
+        - nginx.conf
+        - index.html
+        - mime.types
+        - setup-firewall.sh
+
+    - name: Copy directory
+      copy:
+        src: video-dash/
+        dest: "/home/lance/oai-ansible/pacote_A/video-dash/"
+        mode: preserve
+        owner: lance
+        group: lance
+    
+    - name: Copy install_netflow
+      copy:
+        src: install_netflow/
+        dest: "/home/lance/oai-ansible/pacote_A/install_netflow/"
+        mode: preserve
+        owner: lance
+        group: lance
+
+    - name: Deploy Docker compose
+      community.docker.docker_compose_v2:
+        project_src: "/home/lance/oai-ansible/pacote_A/core-scripts"
+        files:
+          - docker-compose-basic-nrf-pMANO.yaml
+        state: present
+        wait: yes
+
+          #- name: Deploy Docker compose
+      #import_role:
+      #  name: pmano/deploy-docker-compose
+      #vars: 
+      #  compose_path: "{{ ansible_env.HOME }}/oai-ansible/pacote_A/core-scripts/docker-compose-basic-nrf-pMANO.yaml"
+
+    - name: Registrar status de comissionamento Final
+      ansible.builtin.shell: |
+        # Usando o fato real do Ansible para pegar o IP da ens3 ou default
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - Comissionamento CORE OAI Finalizado com IP {{ ansible_default_ipv4.address }}" >> {{ ansible_env.HOME }}/registros.txt

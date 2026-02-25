@@ -1,0 +1,1 @@
+{"event": "verbose", "uuid": "890e4cf9-9312-4e99-a6bc-74bda90974f6", "counter": 12, "stdout": "\u001b[0;35mOrigin: /home/lance/oai-ansible/up_oai.yaml:18:30\u001b[0m", "start_line": 11, "end_line": 12, "runner_ident": "60c22edd-7942-45b1-93d8-b711229df0b0", "created": "2026-02-25T17:44:06.773445+00:00"}

@@ -1,0 +1,83 @@
+[1;35m[WARNING]: No inventory was parsed, only implicit localhost is available[0m
+[1;35m[WARNING]: provided hosts list is empty, only localhost is available. Note that the implicit localhost does not match 'all'[0m
+
+PLAY [Up OpenAirInterface server] **********************************************
+
+TASK [Gathering Facts] *********************************************************
+[0;32mok: [localhost][0m
+
+TASK [Registrar status de comissionamento] *************************************
+[1;35m[WARNING]: Deprecation warnings can be disabled by setting `deprecation_warnings=False` in ansible.cfg.[0m
+[0;35m[DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.[0m
+[0;35mOrigin: /home/lance/oai-ansible/up_oai.yaml:19:30[0m
+[0;35m[0m
+[0;35m17   tasks:[0m
+[0;35m18     - name: Registrar status de comissionamento[0m
+[0;35m19       ansible.builtin.shell: |[0m
+[0;35m                                ^ column 30[0m
+[0;35m[0m
+[0;35mUse `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.[0m
+[0;35m[0m
+[0;33mchanged: [localhost][0m
+
+TASK [Instalar dependências iniciais] ******************************************
+[0;32mok: [localhost][0m
+
+TASK [Adicionar chave GPG oficial do Docker] ***********************************
+[0;32mok: [localhost][0m
+
+TASK [Adicionar repositório estável do Docker] *********************************
+[0;35m[DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.[0m
+[0;35mOrigin: /home/lance/oai-ansible/up_oai.yaml:74:15[0m
+[0;35m[0m
+[0;35m72     - name: Adicionar repositório estável do Docker[0m
+[0;35m73       apt_repository:[0m
+[0;35m74         repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"[0m
+[0;35m                 ^ column 15[0m
+[0;35m[0m
+[0;35mUse `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.[0m
+[0;35m[0m
+[0;32mok: [localhost][0m
+
+TASK [Instalar Docker Engine e Docker Compose] *********************************
+[0;32mok: [localhost][0m
+
+TASK [Garantir que o serviço do Docker está rodando] ***************************
+[0;32mok: [localhost][0m
+
+TASK [Adicionar meu usuário ao grupo docker] ***********************************
+[0;32mok: [localhost][0m
+
+TASK [Habilitar IP forwarding em tempo de execução (runtime)] ******************
+[0;33mchanged: [localhost][0m
+
+TASK [Ensure iptables rule is present] *****************************************
+[0;33mchanged: [localhost][0m
+
+TASK [Adiciona regra POSTROUTING para MASQUERADE na rede 192.168.70.128/26] ****
+[0;33mchanged: [localhost][0m
+
+TASK [Template docker compose file] ********************************************
+[0;35m[DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.[0m
+[0;35mOrigin: /home/lance/oai-ansible/up_oai.yaml:127:15[0m
+[0;35m[0m
+[0;35m125       template: [0m
+[0;35m126         src: docker-compose-basic-nrf-pMANO.yaml.j2[0m
+[0;35m127         dest: "{{ ansible_env.HOME }}/oai-ansible/pacote_A/core-scripts/docker-compose-basic-nrf-pMANO.yaml"[0m
+[0;35m                  ^ column 15[0m
+[0;35m[0m
+[0;35mUse `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.[0m
+[0;35m[0m
+[0;35m[0m
+[0;31m[ERROR]: Task failed: Module failed: Destination directory /root/oai-ansible/pacote_A/core-scripts does not exist[0m
+[0;31mOrigin: /home/lance/oai-ansible/up_oai.yaml:124:7[0m
+[0;31m[0m
+[0;31m122         action: append[0m
+[0;31m123       [0m
+[0;31m124     - name: Template docker compose file[0m
+[0;31m          ^ column 7[0m
+[0;31m[0m
+[0;31mfatal: [localhost]: FAILED! => {"changed": false, "checksum": "150c69d417a3117604cc8fe1a0cdeeae3d6a33e5", "msg": "Destination directory /root/oai-ansible/pacote_A/core-scripts does not exist"}[0m
+
+PLAY RECAP *********************************************************************
+[0;31mlocalhost[0m                  : [0;32mok=11  [0m [0;33mchanged=4   [0m unreachable=0    [0;31mfailed=1   [0m skipped=0    rescued=0    ignored=0   

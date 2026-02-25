@@ -1,0 +1,89 @@
+[1;35m[WARNING]: No inventory was parsed, only implicit localhost is available[0m
+[1;35m[WARNING]: provided hosts list is empty, only localhost is available. Note that the implicit localhost does not match 'all'[0m
+
+PLAY [Up OpenAirInterface server] **********************************************
+
+TASK [Gathering Facts] *********************************************************
+[0;32mok: [localhost][0m
+
+TASK [Registrar status de comissionamento] *************************************
+[1;35m[WARNING]: Deprecation warnings can be disabled by setting `deprecation_warnings=False` in ansible.cfg.[0m
+[0;35m[0m
+[0;33mchanged: [localhost][0m
+
+TASK [Instalar dependências iniciais] ******************************************
+[0;32mok: [localhost][0m
+
+TASK [Adicionar chave GPG oficial do Docker] ***********************************
+[0;32mok: [localhost][0m
+
+TASK [Adicionar repositório estável do Docker] *********************************
+[0;35m[DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.[0m
+[0;35mOrigin: /home/lance/oai-ansible/up_oai.yaml:74:15[0m
+[0;35m[0m
+[0;35m72     - name: Adicionar repositório estável do Docker[0m
+[0;35m73       apt_repository:[0m
+[0;35m74         repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"[0m
+[0;35m                 ^ column 15[0m
+[0;35m[0m
+[0;35mUse `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.[0m
+[0;35m[0m
+[0;32mok: [localhost][0m
+
+TASK [Instalar Docker Engine e Docker Compose] *********************************
+[0;32mok: [localhost][0m
+
+TASK [Garantir que o serviço do Docker está rodando] ***************************
+[0;32mok: [localhost][0m
+
+TASK [Adicionar meu usuário ao grupo docker] ***********************************
+[0;32mok: [localhost][0m
+
+TASK [Habilitar IP forwarding em tempo de execução (runtime)] ******************
+[0;33mchanged: [localhost][0m
+
+TASK [Ensure iptables rule is present] *****************************************
+[0;32mok: [localhost][0m
+
+TASK [Adiciona regra POSTROUTING para MASQUERADE na rede 192.168.70.128/26] ****
+[0;32mok: [localhost][0m
+
+TASK [Template docker compose file] ********************************************
+[0;35m[DEPRECATION WARNING]: The internal "vars" dictionary is deprecated. This feature will be removed from ansible-core version 2.24.[0m
+[0;35mOrigin: /home/lance/oai-ansible/docker-compose-basic-nrf-pMANO.yaml.j2[0m
+[0;35m[0m
+[0;35mUse the `vars` and `varnames` lookups instead.[0m
+[0;35m[0m
+[0;32mok: [localhost][0m
+
+TASK [Copy oai_db_pMANO.sql] ***************************************************
+[0;33mchanged: [localhost][0m
+
+TASK [Copy individual files] ***************************************************
+[0;33mchanged: [localhost] => (item=nginx.conf)[0m
+[0;33mchanged: [localhost] => (item=index.html)[0m
+[0;33mchanged: [localhost] => (item=mime.types)[0m
+[0;33mchanged: [localhost] => (item=setup-firewall.sh)[0m
+
+TASK [Copy directory] **********************************************************
+[0;33mchanged: [localhost][0m
+
+TASK [Copy install_netflow] ****************************************************
+[0;31m[ERROR]: Task failed: Unexpected AnsibleActionFail error: Could not find or access 'install_netflow/'[0m
+[0;31mSearched in:[0m
+[0;31m	/home/lance/oai-ansible/files/install_netflow/[0m
+[0;31m	/home/lance/oai-ansible/install_netflow/[0m
+[0;31m	/home/lance/oai-ansible/files/install_netflow/[0m
+[0;31m	/home/lance/oai-ansible/install_netflow/ on the Ansible Controller.[0m
+[0;31mIf you are using a module and expect the file to exist on the remote, see the remote_src option[0m
+[0;31mOrigin: /home/lance/oai-ansible/up_oai.yaml:154:7[0m
+[0;31m[0m
+[0;31m152         group: lance[0m
+[0;31m153     [0m
+[0;31m154     - name: Copy install_netflow[0m
+[0;31m          ^ column 7[0m
+[0;31m[0m
+[0;31mfatal: [localhost]: FAILED! => {"changed": false, "msg": "Unexpected AnsibleActionFail error: Could not find or access 'install_netflow/'\nSearched in:\n\t/home/lance/oai-ansible/files/install_netflow/\n\t/home/lance/oai-ansible/install_netflow/\n\t/home/lance/oai-ansible/files/install_netflow/\n\t/home/lance/oai-ansible/install_netflow/ on the Ansible Controller.\nIf you are using a module and expect the file to exist on the remote, see the remote_src option"}[0m
+
+PLAY RECAP *********************************************************************
+[0;31mlocalhost[0m                  : [0;32mok=15  [0m [0;33mchanged=5   [0m unreachable=0    [0;31mfailed=1   [0m skipped=0    rescued=0    ignored=0   

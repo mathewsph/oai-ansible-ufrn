@@ -1,0 +1,1 @@
+{"event": "verbose", "uuid": "9104ef16-419e-46c9-87f5-7518c269ac43", "counter": 62, "stdout": "\u001b[0;35mOrigin: /home/lance/oai-ansible/docker-compose-basic-nrf-pMANO.yaml.j2\u001b[0m", "start_line": 61, "end_line": 62, "runner_ident": "87a9cd08-459b-4d57-88f6-4961bc151ef9", "created": "2026-02-25T18:02:17.582048+00:00"}

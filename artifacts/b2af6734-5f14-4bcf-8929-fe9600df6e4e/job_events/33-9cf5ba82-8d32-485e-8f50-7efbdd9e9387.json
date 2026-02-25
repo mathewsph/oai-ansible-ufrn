@@ -1,0 +1,1 @@
+{"event": "verbose", "uuid": "9cf5ba82-8d32-485e-8f50-7efbdd9e9387", "counter": 33, "stdout": "\u001b[0;35m72     - name: Adicionar reposit\u00f3rio est\u00e1vel do Docker\u001b[0m", "start_line": 32, "end_line": 33, "runner_ident": "b2af6734-5f14-4bcf-8929-fe9600df6e4e", "created": "2026-02-25T17:48:45.500450+00:00"}

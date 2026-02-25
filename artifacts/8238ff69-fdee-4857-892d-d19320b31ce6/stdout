@@ -1,0 +1,10 @@
+[1;35m[WARNING]: No inventory was parsed, only implicit localhost is available[0m
+[1;35m[WARNING]: provided hosts list is empty, only localhost is available. Note that the implicit localhost does not match 'all'[0m
+[0;31m[ERROR]: the role 'pmano/deploy-docker-compose' was not found in /home/lance/oai-ansible/roles:/home/lance/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:/home/lance/oai-ansible[0m
+[0;31mOrigin: /home/lance/oai-ansible/up_oai.yaml:161:15[0m
+[0;31m[0m
+[0;31m159     - name: Deploy Docker compose[0m
+[0;31m160       import_role:[0m
+[0;31m161         name: pmano/deploy-docker-compose[0m
+[0;31m                  ^ column 15[0m
+[0;31m[0m

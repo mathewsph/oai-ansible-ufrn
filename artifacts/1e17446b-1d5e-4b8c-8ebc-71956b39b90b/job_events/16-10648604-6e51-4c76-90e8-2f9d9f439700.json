@@ -1,0 +1,1 @@
+{"event": "verbose", "uuid": "10648604-6e51-4c76-90e8-2f9d9f439700", "counter": 16, "stdout": "\u001b[0;35m18       ansible.builtin.shell: |\u001b[0m", "start_line": 15, "end_line": 16, "runner_ident": "1e17446b-1d5e-4b8c-8ebc-71956b39b90b", "created": "2026-02-25T17:42:43.574916+00:00"}

@@ -1,0 +1,26 @@
+[1;35m[WARNING]: No inventory was parsed, only implicit localhost is available[0m
+[1;35m[WARNING]: provided hosts list is empty, only localhost is available. Note that the implicit localhost does not match 'all'[0m
+
+PLAY [Up OpenAirInterface server] **********************************************
+
+TASK [Gathering Facts] *********************************************************
+[0;32mok: [localhost][0m
+
+TASK [Registrar status de comissionamento] *************************************
+[1;35m[WARNING]: Deprecation warnings can be disabled by setting `deprecation_warnings=False` in ansible.cfg.[0m
+[0;35m[0m
+[0;33mchanged: [localhost][0m
+
+TASK [Instalar dependências iniciais] ******************************************
+[0;31m[ERROR]: Task failed: Module failed: No package matching 'libncurses5' is available[0m
+[0;31mOrigin: /home/lance/oai-ansible/up_oai.yaml:21:7[0m
+[0;31m[0m
+[0;31m19         echo "$(date '+%Y-%m-%d %H:%M:%S') - Comissionamento CORE Open5GS Iniciado" >> {{ ansible_env.HOME }}/regi...[0m
+[0;31m20[0m
+[0;31m21     - name: Instalar dependências iniciais[0m
+[0;31m         ^ column 7[0m
+[0;31m[0m
+[0;31mfatal: [localhost]: FAILED! => {"changed": false, "msg": "No package matching 'libncurses5' is available"}[0m
+
+PLAY RECAP *********************************************************************
+[0;31mlocalhost[0m                  : [0;32mok=2   [0m [0;33mchanged=1   [0m unreachable=0    [0;31mfailed=1   [0m skipped=0    rescued=0    ignored=0   
