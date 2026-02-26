@@ -1,0 +1,129 @@
+---
+- name: Up BBU server
+  hosts: gnb
+  
+  vars:
+    #interface: "{{ interface }}"
+      #slice_parts_ip_BBU: "{{ slice_parts | selectattr('components', 'contains', {'name': 'BBU'}) | map(attribute='ip') | list | first }}"
+      #slice_parts_ip_Core: "{{ slice_parts | selectattr('components', 'contains', {'name': 'Core'}) | map(attribute='ip') | list | first }}"
+      #trafficlimit_down: "{{ (trafficlimit | default({})).down | default('') }}"
+      #trafficlimit_up: "{{ (trafficlimit | default({})).up | default('') }}"
+    essential_packages:
+    - ca-certificates
+    - autoconf
+    - automake
+    - ccache
+    - build-essential
+    - cmake
+    - doxygen
+    - ethtool
+    - g++
+    - inetutils-tools
+    - libboost-all-dev
+    - libncurses5
+    - libncurses5-dev
+    - libusb-1.0-0
+    - libusb-1.0-0-dev
+    - libusb-dev
+    - python3-dev
+    - python3-pip
+    - python3-mako
+    - python3-numpy
+    - python3-requests
+    - python3-scipy
+    - python3-setuptools
+    - python3-ruamel.yaml
+    - git
+    - curl
+    - tree
+    - vim
+    - nfs-common
+    - openssh-server
+    - net-tools
+    - lsb-release
+    - gnupg
+    - wireshark
+    - tmux
+
+
+      #roles:
+      #- role: pmano/ensure-system-updated
+
+      #- role: pmano/install-packages
+      #vars:
+      #  packages: "{{ essential_packages }}"
+
+      #- role: pmano-5g/setup-uhd
+
+      #- role: pmano-5g/setup-openairinterface5g
+  
+  tasks:
+    # - name: Verificar se kernel lowlatency já está instalado
+    #   ansible.builtin.shell: dpkg -l | grep linux-image | grep lowlatency || true
+    #   register: lowlatency_kernel_check
+    #   changed_when: false
+
+    # - name: Instalar kernel lowlatency se não estiver instalado
+    #   become: true
+    #   ansible.builtin.apt:
+    #     name:
+    #       - linux-image-lowlatency
+    #       - linux-headers-lowlatency
+    #     state: present
+    #     update_cache: yes
+    #   when: lowlatency_kernel_check.stdout == ""
+
+    # - name: Atualizar GRUB para aplicar novo kernel
+    #   ansible.builtin.command: update-grub
+    #   become: true
+    #   when: lowlatency_kernel_check.stdout == ""
+
+    # - name: Reboot para aplicar kernel lowlatency
+    #   become: true
+    #   ansible.builtin.reboot:
+    #     msg: "Reiniciando para ativar kernel lowlatency"
+    #     connect_timeout: 5
+    #     reboot_timeout: 600
+    #   when: lowlatency_kernel_check.stdout == ""
+    
+    - name: Ajustar rotas
+      become: true
+      ansible.builtin.command: ip route replace 192.168.70.128/26 via 172.31.0.212 dev enp6s0f0
+        #when: slice_parts_ip_Core != slice_parts_ip_BBU
+      ignore_errors: true
+      
+    - name: Copy gnb.sa.band78.fr1.106PRB.usrpb210.conf template
+      template: 
+        src: gnb.sa.band78.fr1.106PRB.usrpb210.conf
+        dest: "{{ ansible_env.HOME }}/openairinterface5g/targets/PROJECTS/GENERIC-NR-5GC/CONF"
+    
+          #- name: Exibir valores de interface e limites de tráfego
+          #debug:
+          #msg:
+          #- "interface: {{ interface }}"
+          #- "trafficlimit_down: {{ trafficlimit_down | default('') }}"
+          #- "trafficlimit_up: {{ trafficlimit_up | default('') }}"
+
+          #- name: Aplicar limite de download (downlink)
+          #become: true
+          #shell: |
+          #tc qdisc del dev {{ interface }} root || true
+          #tc qdisc add dev {{ interface }} root handle 1: htb default 10
+          #tc class add dev {{ interface }} parent 1: classid 1:10 htb rate {{ trafficlimit_down }} ceil {{ trafficlimit_down }}
+          #when: trafficlimit_down != ""
+
+          #- name: Aplicar limite de upload (uplink)
+          #become: true
+          #shell: |
+          #tc qdisc del dev {{ interface }} ingress || true
+          #tc qdisc add dev {{ interface }} handle ffff: ingress
+          #tc filter add dev {{ interface }} parent ffff: protocol ip u32 match u32 0 0 police rate {{ trafficlimit_up }} burst 10k drop flowid :1
+          #when: trafficlimit_up != ""
+
+    - name: Execute tmux BBU session
+      command: "tmux new -d -s bbu_session \"cd ~/openairinterface5g/cmake_targets/ran_build/build/ && sudo ./nr-softmodem -E --sa -O ../../../targets/PROJECTS/GENERIC-NR-5GC/CONF/gnb.sa.band78.fr1.106PRB.usrpb210.conf --continuous-tx --gNBs.[0].min_rxtxtime 6\""
+      #command: "tmux new -d -s bbu_session \"cd ~/openairinterface5g/cmake_targets/ran_build/build/ && sudo ./nr-softmodem --rfsimulator server --rfsim --sa -O ../../../targets/PROJECTS/GENERIC-NR-5GC/CONF/gnb.sa.band78.fr1.106PRB.usrpb210.conf --continuous-tx --gNBs.[0].min_rxtxtime 6\""
+    
+    - name: Registrar status de comissionamento BBU
+      ansible.builtin.shell: |
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - Comissionamento BBU OAI Finalizado" >> {{ ansible_env.HOME }}/registros.txt
