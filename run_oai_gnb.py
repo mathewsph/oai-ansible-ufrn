@@ -2,7 +2,7 @@ import ansible_runner
 import os
 
 # --- CONFIGURAÇÕES DO AMBIENTE ---
-GNB_IP = '172.31.0.56'  # <--- Altere para o IP da sua gNB
+GNB_IP = '172.31.0.215'  # <--- Altere para o IP da sua gNB
 GNB_USER = 'lance'   # <--- Altere para o seu usuário (ex: 'lance')
 GNB_PASS = 'lance123'     # <--- Altere para a senha do sudo
 PLAYBOOK_PATH = 'up_oai_gnb.yml' # Nome do arquivo .yaml que você me enviou
@@ -17,7 +17,7 @@ r = ansible_runner.run(
     inventory={
         'all': {
             'hosts': {
-                'gnb': {
+                'gnb_test': {
                     'ansible_host': GNB_IP,
                     'ansible_user': GNB_USER,
                     'ansible_password': GNB_PASS,

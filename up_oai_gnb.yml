@@ -1,7 +1,8 @@
 ---
 - name: Up BBU server
-  hosts: gnb
-  become: yes
+  hosts: gnb_test
+    #gather_facts: no
+    #become: yes
   vars:
     username: "lance"
     user_home: "/home/{{ username }}"
@@ -23,9 +24,17 @@
       #- role: pmano-5g/setup-openairinterface5g
   
   tasks:
+    - name: Forçar instalação do python3-six via raw (necessário para Ubuntu 24.04)
+      ansible.builtin.raw: apt-get update && apt-get install -y python3-six
+      become: yes
+      changed_when: false
+
     - name: Registrar inicio
-      ansible.builtin.shell: |
-        echo "$(date '+%Y-%m-%d %H:%M:%S') - Iniciado" >> {{ user_home }}/registros.txt
+      ansible.builtin.lineinfile:
+        path: "{{ user_home }}/registros.txt"
+        line: "{{ lookup('pipe', 'date +%Y-%m-%d\\ %H:%M:%S') }} - Iniciado"
+        create: yes
+      become: false  # Garante que crie como usuário lance   
         
     #Role ensure-system-updated    
     - name: Checar se é necessário realizar reboot
@@ -55,8 +64,8 @@
           - g++
           - inetutils-tools
           - libboost-all-dev
-          - libncurses5
-          - libncurses5-dev
+          - libncurses6
+          - libncurses-dev
           - libusb-1.0-0
           - libusb-1.0-0-dev
           - libusb-dev
@@ -83,13 +92,13 @@
     #role setup-uhd      
     - name: Verificar se diretório UHD existe
       ansible.builtin.stat:
-        path: "{{ ansible_env.HOME }}/uhd"
+        path: "{{ user_home }}/uhd"
       register: uhd_dir
 
     - name: "Clone UHD repository"
       git:
         repo: https://github.com/EttusResearch/uhd.git
-        dest: "{{ ansible_env.HOME }}/uhd"
+        dest: "{{ user_home }}/uhd"
         version: UHD-4.7
         update: no
       when: not uhd_dir.stat.exists
@@ -102,27 +111,36 @@
 
     - name: Ensure the UHD/host/build directory exists
       file:
-        path: "{{ ansible_env.HOME }}/uhd/host/build"
+        path: "{{ user_home }}/uhd/host/build"
         state: directory
       when: not uhd_dir.stat.exists
 
     - name: Cmake UHD
       command: cmake ../
       args:
-        chdir: "{{ ansible_env.HOME }}/uhd/host/build"
-        creates: "{{ ansible_env.HOME }}/uhd/host/build/CMakeCache.txt"
+        chdir: "{{ user_home }}/uhd/host/build"
+        creates: "{{ user_home }}/uhd/host/build/CMakeCache.txt"
       when: not uhd_dir.stat.exists
+
+        #    - name: Build UHD
+        #      become: true
+        #     shell: |
+        #        make -j"$(nproc)"
+        #        make install
+        #        ldconfig
+        #      args:
+        #       chdir: "{{ user_home }}/uhd/host/build"
+        #        creates: /usr/local/bin/uhd_find_devices
+        #      when: not uhd_dir.stat.exists
 
     - name: Build UHD
       become: true
       shell: |
         make -j"$(nproc)"
         make install
-        ldconfig
+        ldconfig  # <--- CRÍTICO: Atualiza o cache de bibliotecas do sistema
       args:
-        chdir: "{{ ansible_env.HOME }}/uhd/host/build"
-        creates: /usr/local/bin/uhd_find_devices
-      when: not uhd_dir.stat.exists
+        chdir: "{{ user_home }}/uhd/host/build"
 
     - name: USRP images downloader
       become: true
@@ -133,32 +151,71 @@
       become: true
       ansible.builtin.lineinfile:
         path: /etc/sudoers.d/nr_softmodem
-        line: "{{ ansible_user }} ALL=(ALL) NOPASSWD: {{ ansible_env.HOME }}/openairinterface5g/cmake_targets/ran_build/build/nr-softmodem"
+        line: "{{ username }} ALL=(ALL) NOPASSWD: {{ user_home }}/openairinterface5g/cmake_targets/ran_build/build/nr-softmodem"
         create: yes
         mode: '0440'
         validate: '/usr/sbin/visudo -cf %s'
-      when: not uhd_dir.stat.exists
     
     #pmano-5g/setup-openairinterface5g
     - name: "Clone openairinterface5g repository"
       git:
         repo: https://gitlab.eurecom.fr/oai/openairinterface5g.git
-        dest: "{{ ansible_env.HOME }}/openairinterface5g"
+        dest: "{{ user_home }}/openairinterface5g"
         version: 2024.w42
         update: no
-        
+   
+
+    - name: Instalar dependências de interface (Xforms) para Scopes
+      become: true
+      ansible.builtin.apt:
+        name: 
+          - libforms-dev
+          - libforms-bin
+          - libx11-dev
+          - libxpm-dev
+        state: present
+
     - name: Build openairinterface5g
       become: true
       shell: |
         source oaienv
         cd cmake_targets
+        export DEBIAN_FRONTEND=noninteractive
+        # Adicionamos o caminho onde o UHD costuma ser instalado
+        export CMAKE_PREFIX_PATH=/usr/local
         ./build_oai -I
         ./build_oai -I --install-optional-packages
-        ./build_oai -w USRP --ninja --gNB --eNB --nrUE -C --build-lib "uescope nrscope enbscope telnetsrv"
-        chmod 755 -R {{ ansible_env.HOME }}/openairinterface5g
+        # Build com o hardware USRP
+        ./build_oai -w USRP --ninja --gNB --eNB --nrUE -C --build-lib "telnetsrv"
       args:
-        chdir: "{{ ansible_env.HOME }}/openairinterface5g"
-        creates: "{{ ansible_env.HOME }}/openairinterface5g/cmake_targets/ran_build/build/nr-softmodem"
+        chdir: "{{ user_home }}/openairinterface5g"
+        executable: /bin/bash
+          #- name: Build openairinterface5g
+          #become: true
+          #shell: |
+          #source oaienv
+          #cd cmake_targets
+        # O pulo do gato: exportar DEBIAN_FRONTEND e usar o -y do apt se necessário
+        #export DEBIAN_FRONTEND=noninteractive
+        #./build_oai -I -y
+        #./build_oai -I --install-optional-packages -y
+        #./build_oai -w USRP --ninja --gNB --eNB --nrUE -C --build-lib "uescope nrscope enbscope telnetsrv"
+        #args:
+        #chdir: "{{ user_home }}/openairinterface5g"
+        #executable: /bin/bash # Importante para o 'source' funcionar
+
+          #- name: Build openairinterface5g
+          #become: true
+          #shell: |
+          #source oaienv
+          #cd cmake_targets
+          #./build_oai -I
+          #./build_oai -I --install-optional-packages
+          #./build_oai -w USRP --ninja --gNB --eNB --nrUE -C --build-lib "uescope nrscope enbscope telnetsrv"
+          #chmod 755 -R {{ ansible_env.HOME }}/openairinterface5g
+          #args:
+          #chdir: "{{ user_home }}/openairinterface5g"
+          #creates: "{{ user_home }}/openairinterface5g/cmake_targets/ran_build/build/nr-softmodem"
     
     # - name: Verificar se kernel lowlatency já está instalado
     #   ansible.builtin.shell: dpkg -l | grep linux-image | grep lowlatency || true
@@ -197,7 +254,15 @@
     - name: Copy gnb.sa.band78.fr1.106PRB.usrpb210.conf template
       template: 
         src: gnb.sa.band78.fr1.106PRB.usrpb210.conf
-        dest: "{{ ansible_env.HOME }}/openairinterface5g/targets/PROJECTS/GENERIC-NR-5GC/CONF"
+        dest: "{{ user_home }}/openairinterface5g/targets/PROJECTS/GENERIC-NR-5GC/CONF"
+
+    - name: Garantir que o usuário lance é dono da pasta do OAI
+      become: true
+      ansible.builtin.file:
+        path: "{{ user_home }}/openairinterface5g"
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        recurse: yes  # O equivalente ao -R (recursivo)
     
           #- name: Exibir valores de interface e limites de tráfego
           #debug:

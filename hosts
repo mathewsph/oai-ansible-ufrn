@@ -4,5 +4,8 @@
 [gnb]
 172.31.0.56  ansible_user=lance
 
+[gnb_test]
+172.31.0.215  ansible_user=lance 
+
 [video_app]
 192.168.160.80  ansible_user=lance
