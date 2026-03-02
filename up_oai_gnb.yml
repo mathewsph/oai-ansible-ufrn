@@ -1,6 +1,6 @@
 ---
 - name: Up BBU server
-  hosts: gnb_test
+  hosts: gnb
     #gather_facts: no
     #become: yes
   vars:
