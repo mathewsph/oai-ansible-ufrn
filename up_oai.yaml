@@ -19,6 +19,21 @@
       ansible.builtin.shell: |
         echo "$(date '+%Y-%m-%d %H:%M:%S') - Comissionamento CORE Open5GS Iniciado" >> {{ ansible_env.HOME }}/registros.txt
 
+    - name: Limpar arquivos de repositório do Docker com erro
+      become: yes
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/apt/sources.list.d/docker.list
+        - /etc/apt/sources.list.d/docker.sources
+        - /etc/apt/sources.list.d/docker-repo.list
+
+    - name: Forçar atualização do cache do apt após limpeza
+      become: yes
+      apt:
+        update_cache: yes
+
     - name: Instalar dependências iniciais
       apt:
         name:
@@ -64,41 +79,11 @@
         state: present
         update_cache: yes
 
-    - name: Registrar inicio da instalacao do docker
+    - name: Registrar inicio do deploy do 5G-Core
       ansible.builtin.shell: |
-        echo "$(date '+%Y-%m-%d %H:%M:%S') - Instalacao do docker iniciada" >> {{ ansible_env.HOME }}/registros.txt
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - Inicio do deploy do OpenAirInterface" >> {{ ansible_env.HOME }}/registros.txt
 
-    - name: Adicionar chave GPG oficial do Docker
-      apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-
-    - name: Adicionar repositório estável do Docker
-      apt_repository:
-        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
-        state: present
-
-    - name: Instalar Docker Engine e Docker Compose
-      apt:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - docker-compose-plugin
-        state: present
-        update_cache: yes
-
-    - name: Garantir que o serviço do Docker está rodando
-      service:
-        name: docker
-        state: started
-        enabled: yes
-
-    - name: Registrar fim da instalacao do docker
-      ansible.builtin.shell: |
-        echo "$(date '+%Y-%m-%d %H:%M:%S') - Instalacao do docker finalizada                                                     " >> {{ ansible_env.HOME }}/registros.txt
-
-    - name: Adicionar meu usuário ao grupo docker
+    - name: Adicionar meu usuário ao grupo docker    
       user:
         name: "lance"
         groups: docker
@@ -174,12 +159,6 @@
           - docker-compose-basic-nrf-pMANO.yaml
         state: present
         wait: yes
-
-          #- name: Deploy Docker compose
-      #import_role:
-      #  name: pmano/deploy-docker-compose
-      #vars: 
-      #  compose_path: "{{ ansible_env.HOME }}/oai-ansible/pacote_A/core-scripts/docker-compose-basic-nrf-pMANO.yaml"
 
     - name: Registrar status de comissionamento Final
       ansible.builtin.shell: |
