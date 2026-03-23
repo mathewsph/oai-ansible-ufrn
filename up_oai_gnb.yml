@@ -1,29 +1,74 @@
 ---
 - name: Up BBU server
   hosts: gnb
-    #gather_facts: no
-    #become: yes
   vars:
     username: "lance"
     user_home: "/home/{{ username }}"
-    #interface: "{{ interface }}"
-      #slice_parts_ip_BBU: "{{ slice_parts | selectattr('components', 'contains', {'name': 'BBU'}) | map(attribute='ip') | list | first }}"
-      #slice_parts_ip_Core: "{{ slice_parts | selectattr('components', 'contains', {'name': 'Core'}) | map(attribute='ip') | list | first }}"
-      #trafficlimit_down: "{{ (trafficlimit | default({})).down | default('') }}"
-      #trafficlimit_up: "{{ (trafficlimit | default({})).up | default('') }}"
+    interface: "enp6s0f0"
+    slice_parts_ip_BBU: "172.31.0.56"
+    slice_parts_ip_Core: "172.31.0.212"
+    trafficlimit_down: "500mbit"
+    trafficlimit_up: "10mbit"
+    essential_packages:
+    - ca-certificates
+    - autoconf
+    - automake
+    - ccache
+    - build-essential
+    - cmake
+    - doxygen
+    - ethtool
+    - g++
+    - inetutils-tools
+    - libboost-all-dev
+    - libncurses5
+    - libncurses5-dev
+    - libusb-1.0-0
+    - libusb-1.0-0-dev
+    - libusb-dev
+    - python3-dev
+    - python3-pip
+    - python3-mako
+    - python3-numpy
+    - python3-requests
+    - python3-scipy
+    - python3-setuptools
+    - python3-ruamel.yaml
+    - git
+    - curl
+    - tree
+    - vim
+    - nfs-common
+    - openssh-server
+    - net-tools
+    - lsb-release
+    - gnupg
+    - wireshark
+    - tmux
 
-      #roles:
-      #- role: pmano/ensure-system-updated
-
-      #- role: pmano/install-packages
-      #vars:
-      #  packages: "{{ essential_packages }}"
-
-      #- role: pmano-5g/setup-uhd
-
-      #- role: pmano-5g/setup-openairinterface5g
-  
   tasks:
+    - name: Registrar status de comissionamento BBU - inicio do playbook - [{{ ansible_date_time.time }}]
+      become: yes
+      ansible.builtin.shell: |
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - Playbook BBU OAI Iniciado" >> /home/lance/registros.txt
+
+    - name: Check if reboot required
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_required_file
+
+    - name: Reboot if required (due to kernel update)
+      become: true
+      reboot:
+        msg: Rebooting due to a kernel update
+      when: reboot_required_file.stat.exists
+
+    - name: Install essential packages
+      become: true
+      package:
+        name: "{{ essential_packages }}"
+        state: present    
+
     - name: Forçar instalação do python3-six via raw (necessário para Ubuntu 24.04)
       ansible.builtin.raw: apt-get update && apt-get install -y python3-six
       become: yes
@@ -36,59 +81,6 @@
         create: yes
       become: false  # Garante que crie como usuário lance   
         
-    #Role ensure-system-updated    
-    - name: Checar se é necessário realizar reboot
-      stat:
-        path: /var/run/reboot-required
-      register: reboot_required_file
-
-    - name: Reboot if required (due to kernel update)
-      become: true
-      reboot:
-        msg: Rebooting due to a kernel update
-      when: reboot_required_file.stat.exists
-  
-    #Role install-packages
-    - name: Instalar dependências necessárias para a compilação do OAI RAN
-      become : true
-      apt:
-        name:
-          - ca-certificates
-          - autoconf
-          - automake
-          - ccache
-          - build-essential
-          - cmake
-          - doxygen
-          - ethtool
-          - g++
-          - inetutils-tools
-          - libboost-all-dev
-          - libncurses6
-          - libncurses-dev
-          - libusb-1.0-0
-          - libusb-1.0-0-dev
-          - libusb-dev
-          - python3-dev
-          - python3-pip
-          - python3-mako
-          - python3-numpy
-          - python3-requests
-          - python3-scipy
-          - python3-setuptools
-          - python3-ruamel.yaml
-          - git
-          - curl
-          - tree
-          - vim
-          - nfs-common
-          - openssh-server
-          - net-tools
-          - lsb-release
-          - gnupg
-          - wireshark
-          - tmux
-    
     #role setup-uhd      
     - name: Verificar se diretório UHD existe
       ansible.builtin.stat:
@@ -122,25 +114,16 @@
         creates: "{{ user_home }}/uhd/host/build/CMakeCache.txt"
       when: not uhd_dir.stat.exists
 
-        #    - name: Build UHD
-        #      become: true
-        #     shell: |
-        #        make -j"$(nproc)"
-        #        make install
-        #        ldconfig
-        #      args:
-        #       chdir: "{{ user_home }}/uhd/host/build"
-        #        creates: /usr/local/bin/uhd_find_devices
-        #      when: not uhd_dir.stat.exists
-
     - name: Build UHD
       become: true
       shell: |
         make -j"$(nproc)"
         make install
-        ldconfig  # <--- CRÍTICO: Atualiza o cache de bibliotecas do sistema
+        ldconfig
       args:
         chdir: "{{ user_home }}/uhd/host/build"
+        creates: /usr/local/bin/uhd_find_devices
+      when: not uhd_dir.stat.exists
 
     - name: USRP images downloader
       become: true
@@ -155,6 +138,12 @@
         create: yes
         mode: '0440'
         validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Registrar status de comissionamento BBU
+      become: yes
+      ansible.builtin.shell: |
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - Comissionamento BBU OAI Iniciado" >> /home/lance/registros.txt
+
     
     #pmano-5g/setup-openairinterface5g
     - name: "Clone openairinterface5g repository"
@@ -180,43 +169,14 @@
       shell: |
         source oaienv
         cd cmake_targets
-        export DEBIAN_FRONTEND=noninteractive
-        # Adicionamos o caminho onde o UHD costuma ser instalado
-        export CMAKE_PREFIX_PATH=/usr/local
         ./build_oai -I
         ./build_oai -I --install-optional-packages
-        # Build com o hardware USRP
-        ./build_oai -w USRP --ninja --gNB --eNB --nrUE -C --build-lib "telnetsrv"
+        ./build_oai -w USRP --ninja --gNB --eNB --nrUE -C --build-lib "uescope nrscope enbscope telnetsrv"
+        chmod 755 -R {{ user_home }}/openairinterface5g
       args:
         chdir: "{{ user_home }}/openairinterface5g"
-        executable: /bin/bash
-          #- name: Build openairinterface5g
-          #become: true
-          #shell: |
-          #source oaienv
-          #cd cmake_targets
-        # O pulo do gato: exportar DEBIAN_FRONTEND e usar o -y do apt se necessário
-        #export DEBIAN_FRONTEND=noninteractive
-        #./build_oai -I -y
-        #./build_oai -I --install-optional-packages -y
-        #./build_oai -w USRP --ninja --gNB --eNB --nrUE -C --build-lib "uescope nrscope enbscope telnetsrv"
-        #args:
-        #chdir: "{{ user_home }}/openairinterface5g"
-        #executable: /bin/bash # Importante para o 'source' funcionar
+        creates: "{{ user_home }}/openairinterface5g/cmake_targets/ran_build/build/nr-softmodem"
 
-          #- name: Build openairinterface5g
-          #become: true
-          #shell: |
-          #source oaienv
-          #cd cmake_targets
-          #./build_oai -I
-          #./build_oai -I --install-optional-packages
-          #./build_oai -w USRP --ninja --gNB --eNB --nrUE -C --build-lib "uescope nrscope enbscope telnetsrv"
-          #chmod 755 -R {{ ansible_env.HOME }}/openairinterface5g
-          #args:
-          #chdir: "{{ user_home }}/openairinterface5g"
-          #creates: "{{ user_home }}/openairinterface5g/cmake_targets/ran_build/build/nr-softmodem"
-    
     # - name: Verificar se kernel lowlatency já está instalado
     #   ansible.builtin.shell: dpkg -l | grep linux-image | grep lowlatency || true
     #   register: lowlatency_kernel_check
@@ -264,28 +224,28 @@
         group: "{{ username }}"
         recurse: yes  # O equivalente ao -R (recursivo)
     
-          #- name: Exibir valores de interface e limites de tráfego
-          #debug:
-          #msg:
-          #- "interface: {{ interface }}"
-          #- "trafficlimit_down: {{ trafficlimit_down | default('') }}"
-          #- "trafficlimit_up: {{ trafficlimit_up | default('') }}"
+    - name: Exibir valores de interface e limites de tráfego
+      debug:
+        msg:
+          - "interface: {{ interface }}"
+          - "trafficlimit_down: {{ trafficlimit_down | default('') }}"
+          - "trafficlimit_up: {{ trafficlimit_up | default('') }}"
 
-          #- name: Aplicar limite de download (downlink)
-          #become: true
-          #shell: |
-          #tc qdisc del dev {{ interface }} root || true
-          #tc qdisc add dev {{ interface }} root handle 1: htb default 10
-          #tc class add dev {{ interface }} parent 1: classid 1:10 htb rate {{ trafficlimit_down }} ceil {{ trafficlimit_down }}
-          #when: trafficlimit_down != ""
+    - name: Aplicar limite de download (downlink)
+      become: true
+      shell: |
+        tc qdisc del dev {{ interface }} root || true
+        tc qdisc add dev {{ interface }} root handle 1: htb default 10
+        tc class add dev {{ interface }} parent 1: classid 1:10 htb rate {{ trafficlimit_down }} ceil {{ trafficlimit_down }}
+      when: trafficlimit_down != ""
 
-          #- name: Aplicar limite de upload (uplink)
-          #become: true
-          #shell: |
-          #tc qdisc del dev {{ interface }} ingress || true
-          #tc qdisc add dev {{ interface }} handle ffff: ingress
-          #tc filter add dev {{ interface }} parent ffff: protocol ip u32 match u32 0 0 police rate {{ trafficlimit_up }} burst 10k drop flowid :1
-          #when: trafficlimit_up != ""
+    - name: Aplicar limite de upload (uplink)
+      become: true
+      shell: |
+        tc qdisc del dev {{ interface }} ingress || true
+        tc qdisc add dev {{ interface }} handle ffff: ingress
+        tc filter add dev {{ interface }} parent ffff: protocol ip u32 match u32 0 0 police rate {{ trafficlimit_up }} burst 10k drop flowid :1
+      when: trafficlimit_up != ""
 
     - name: Execute tmux BBU session
       command: "tmux new -d -s bbu_session \"cd ~/openairinterface5g/cmake_targets/ran_build/build/ && sudo ./nr-softmodem -E --sa -O ../../../targets/PROJECTS/GENERIC-NR-5GC/CONF/gnb.sa.band78.fr1.106PRB.usrpb210.conf --continuous-tx --gNBs.[0].min_rxtxtime 6\""
