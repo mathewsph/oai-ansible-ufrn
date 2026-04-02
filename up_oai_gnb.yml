@@ -7,8 +7,8 @@
     interface: "enp6s0f0"
     slice_parts_ip_BBU: "172.31.0.56"
     slice_parts_ip_Core: "172.31.0.212"
-    trafficlimit_down: "500mbit"
-    trafficlimit_up: "10mbit"
+    trafficlimit_down: ""
+    trafficlimit_up: ""
     essential_packages:
     - ca-certificates
     - autoconf
